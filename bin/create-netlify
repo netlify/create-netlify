@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+// @ts-check
+const { createMainCommand } = require('netlify-cli/src/commands')
+const program = createMainCommand()
+const { greenBright, gray } = require('chalk')
+const { version, name } = require('../package.json')
+
+console.log(gray`${name} v${version}`)
+
+console.log(`
+
+✨ Welcome to Netlify ✨'
+
+Let's get ready to deploy! 🚀`)
+
+program
+  .name('netlify')
+  .version(version)
+  .parseAsync([process.argv[0], process.argv[1], 'init'])
+  .then(() => {
+    program.onEnd()
+    console.log(`
+
+To build, run and deploy from the command line, install the Netlify CLI:
+
+${greenBright(getGlobalInstallCommand())}
+    
+    `)
+  })
+  .catch((err) => program.onEnd(err))
+
+function getGlobalInstallCommand() {
+  if (process?.env?.npm_execpath?.includes('yarn')) {
+    return 'yarn global add netlify-cli'
+  }
+  return 'npm install -g netlify-cli'
+}

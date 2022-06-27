@@ -1,0 +1,20 @@
+{
+  "name": "create-netlify",
+  "version": "0.0.1",
+  "description": "Create a new Netlify site",
+  "bin": {
+    "create-netlify": "bin/create-netlify"
+  },
+  "files": [
+    "bin/create-netlify"
+  ],
+  "scripts": {
+    "bin": "node bin/create-netlify"
+  },
+  "author": "Matt Kane <matt.kane@netlify.com>",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "netlify-cli": "latest"
+  }
+}
