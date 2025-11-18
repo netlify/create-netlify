@@ -133,8 +133,17 @@ export const frameworks: FrameworkConfig[] = [
     label: "Nuxt",
     description: "The Intuitive Vue Framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "nuxi@4", "init", projectName, ...restArgs]
+      return [
+        "exec",
+        "nuxi@4",
+        "init",
+        projectName,
+        "--modules=netlify",
+        ...restArgs,
+      ]
     },
+    // `nuxi init` with `--modules=netlify` above ^ installs and `@netlify/nuxt` and adds it to
+    // nuxt.config.*
     buildPostCreateCommands: () => {
       return []
     },
@@ -144,7 +153,7 @@ export const frameworks: FrameworkConfig[] = [
     label: "SvelteKit",
     description: "Web development, streamlined",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "create-svelte@7", projectName, ...restArgs]
+      return ["exec", "sv@0.9", "create", projectName, "--install", ...restArgs]
     },
     buildPostCreateCommands: () => {
       // TODO: Add Netlify adapter for SvelteKit
@@ -156,11 +165,40 @@ export const frameworks: FrameworkConfig[] = [
     label: "React Router",
     description: "React Router v7 framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "create-react-router@7", projectName, ...restArgs]
+      return [
+        "exec",
+        "create-react-router@7",
+        projectName,
+        "--install",
+        ...restArgs,
+      ]
     },
-    buildPostCreateCommands: () => {
-      // TODO: Add Netlify config for React Router
-      return []
+    buildPostCreateCommands: ({ cwd, packageManager }) => {
+      return [
+        // Install the Netlify React Router plugin + Netlify Vite plugin
+        withPackageManager(
+          [
+            "add",
+            "--save-dev",
+            "@netlify/vite-plugin",
+            "@netlify/vite-plugin-react-router",
+          ],
+          packageManager
+        ),
+        // Add it to vite.config using magicast's Vite helpers
+        async () => {
+          await addVitePlugin(cwd, {
+            name: "netlifyVite",
+            from: "@netlify/vite-plugin",
+            default: true,
+          })
+          await addVitePlugin(cwd, {
+            name: "netlifyReactRouter",
+            from: "@netlify/vite-plugin-react-router",
+            default: true,
+          })
+        },
+      ]
     },
   },
 ]

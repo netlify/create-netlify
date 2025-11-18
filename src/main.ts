@@ -21,6 +21,7 @@ import {
   isCancel,
   log,
   note,
+  outro,
   select,
   text,
 } from "@clack/prompts"
@@ -87,7 +88,7 @@ const showIntro = async (): Promise<void> => {
 
          ${netlifyCyan.bold("N E T L I F Y")}
 
-       ${ansis.inverse("→ → → Push your ideas to the web")}
+       ${netlifyTeal.inverse("→ → → Push your ideas to the web")}
   `)
   const FINAL_PAUSE_MS = 200
   await new Promise((resolve) => setTimeout(resolve, FINAL_PAUSE_MS))
@@ -96,9 +97,8 @@ const showIntro = async (): Promise<void> => {
 // When we're all done, but before we prompt you to run an AI agent task
 const showPreOutro = async (): Promise<void> => {
   console.log("")
-  console.log("")
-  console.log(
-    `   ${netlifyBright.inverse(" 🚀 ")} ${netlifyCyan.bold("Your Netlify project is up and running! Go forth and build.")}`
+  outro(
+    `${netlifyBright.inverse(" 🚀 ")} ${netlifyCyan.bold("Your Netlify project is up and running! Go forth and build.")}`
   )
 }
 
@@ -112,14 +112,8 @@ const showOutro = async (
     ["exec", "netlify@latest", "deploy"],
     packageManager
   ).join(" ")
-  note(
-    highlightCode(
-      `cd ${projectDir}\n${packageManager} run dev # Start the development server\n${deployCommand} # Deploy to Netlify`
-    ),
-    "Next steps"
-  )
-  console.log(
-    `   ${ansis.dim("Deploy to")} ${netlifyCyan.inverse(" Netlify ")} ${ansis.dim("→")} ${ansis.cyan("app.netlify.com")}`
+  outro(
+    `Next steps:\n${highlightCode(`cd ${projectDir}\n${packageManager} run dev`)} # Start the development server\n${highlightCode(deployCommand)} # Deploy to Netlify\n${ansis.dim("Read the Netlify docs ")} ${ansis.dim("→")} ${ansis.cyan("https://app.netlify.com")}`
   )
 }
 
@@ -433,7 +427,7 @@ const main = async (): Promise<void> => {
 
     // Optional: Let user kick off an agent task
     const agentPromptResult = await text({
-      message: `🤖 ${netlifyCyan("Netlify's AI can help you build. Describe what you want, in as much or as little detail as you want: ")} ${ansis.dim("(press Enter to skip)")}`,
+      message: `🤖 (Optional) ${netlifyCyan("Netlify's AI can help you. Describe what you want, in as much or as little detail as you want: ")} ${ansis.dim("(press Enter to skip)")}`,
       placeholder:
         "e.g., Add a homepage with a hero section and contact form. NO PURPLE.",
     })
