@@ -7,6 +7,7 @@
  */
 
 import { addVitePlugin } from "./config-files.js"
+import { type PackageManager, withPackageManager } from "./package-manager.js"
 
 export interface FrameworkConfig {
   id: string
@@ -40,14 +41,25 @@ export interface FrameworkConfig {
    * @param cwd - The working directory (project root)
    * @returns Array of commands (strings) or functions to run sequentially
    */
-  postCreateCommands?(args: {
-    projectName: string
+  buildPostCreateCommands?(args: {
     cwd: string
+    packageManager: PackageManager
+    projectName: string
   }): (string[] | (() => Promise<void>))[]
 }
 
 /**
  * All supported frameworks
+ *
+ * When making changes here, be very careful about command and package names, as there are subtle
+ * but important distinctions:
+ * - `npm create foo` is a magical command equivalent to `npm exec create-foo` (literally adds `create-` prefix)
+ * - `npx` is just an alias for `npm exec`, so `npx bar-baz` is equivalent to `npm exec bar-baz`
+ * - Thus, `npm create foo` === `npx create-foo` === `npm exec create-foo`
+ * - Often, we'll want to run `npm create foo` as the "create cmd" and then use `npx foo bar baz` as
+ *   a "post-create" cmd
+ * → As using the same identifier to refer to different packages would be confusing and error prone,
+ *   we strive to avoid the `create` command entirely.
  *
  * TODO: Add more frameworks as needed
  * TODO: Make version pins configurable
@@ -59,10 +71,24 @@ export const frameworks: FrameworkConfig[] = [
     description: "The web framework for content-driven websites",
     buildCreateCommand: ({ projectName, restArgs }) => {
       // We force `--install, otherwise our `astro add netlify` may fail
-      return ["create", "astro@4", projectName, "--install", ...restArgs]
+      return [
+        "exec",
+        "create-astro@4",
+        "--",
+        projectName,
+        "--install",
+        ...restArgs,
+      ]
     },
-    postCreateCommands: () => {
-      return [["npx", "astro", "add", "netlify@latest", "--yes"]]
+    buildPostCreateCommands: ({ packageManager }) => {
+      return [
+        withPackageManager(
+          // TODO(serhalp): The `astro add` help claims it supports `--yes` but it fails when used.
+          // Report this to Astro.
+          ["exec", "astro", "--", "add", "netlify"],
+          packageManager
+        ),
+      ]
     },
   },
   {
@@ -70,9 +96,9 @@ export const frameworks: FrameworkConfig[] = [
     label: "Next.js",
     description: "The React Framework for the Web",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["create", "next-app@16", projectName, ...restArgs]
+      return ["exec", "create-next-app@16", "--", projectName, ...restArgs]
     },
-    postCreateCommands: () => {
+    buildPostCreateCommands: () => {
       // Zero config
       return []
     },
@@ -82,12 +108,15 @@ export const frameworks: FrameworkConfig[] = [
     label: "Vite",
     description: "Next Generation Frontend Tooling",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["create", "vite@7", projectName, ...restArgs]
+      return ["exec", "create-vite@7", "--", projectName, ...restArgs]
     },
-    postCreateCommands: ({ cwd }) => {
+    buildPostCreateCommands: ({ cwd, packageManager }) => {
       return [
         // Install the Netlify Vite plugin
-        ["npm", "install", "-D", "@netlify/vite-plugin"],
+        withPackageManager(
+          ["add", "--save-dev", "@netlify/vite-plugin"],
+          packageManager
+        ),
         // Add it to vite.config using magicast's Vite helpers
         async () => {
           await addVitePlugin(cwd, {
@@ -104,9 +133,9 @@ export const frameworks: FrameworkConfig[] = [
     label: "Nuxt",
     description: "The Intuitive Vue Framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["npx", "nuxi@4", "init", projectName, ...restArgs]
+      return ["exec", "nuxi@4", "--", "init", projectName, ...restArgs]
     },
-    postCreateCommands: () => {
+    buildPostCreateCommands: () => {
       return []
     },
   },
@@ -115,9 +144,9 @@ export const frameworks: FrameworkConfig[] = [
     label: "SvelteKit",
     description: "Web development, streamlined",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["create", "svelte@7", projectName, ...restArgs]
+      return ["exec", "create-svelte@7", "--", projectName, ...restArgs]
     },
-    postCreateCommands: () => {
+    buildPostCreateCommands: () => {
       // TODO: Add Netlify adapter for SvelteKit
       return []
     },
@@ -127,9 +156,9 @@ export const frameworks: FrameworkConfig[] = [
     label: "React Router",
     description: "React Router v7 framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["npx", "create-react-router@7", projectName, ...restArgs]
+      return ["exec", "create-react-router@7", "--", projectName, ...restArgs]
     },
-    postCreateCommands: () => {
+    buildPostCreateCommands: () => {
       // TODO: Add Netlify config for React Router
       return []
     },

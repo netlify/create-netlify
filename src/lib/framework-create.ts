@@ -4,87 +4,13 @@
 import { resolve } from "node:path"
 import { existsSync } from "node:fs"
 
-import { log, note } from "@clack/prompts"
+import { log } from "@clack/prompts"
 import { createSpinner } from "nanospinner"
-import { detect } from "@antfu/ni"
 
 import type { FrameworkConfig } from "./framework-choices.js"
 import { runCommand } from "./shell.js"
 import { highlightCode } from "./cli.js"
-
-// Cached package manager to avoid multiple detections
-let detectedAgent: string | null
-
-/**
- * Detect the package manager being used
- *
- * Results are cached to avoid multiple filesystem checks
- */
-const detectPackageManager = async (): Promise<string> => {
-  if (detectedAgent) {
-    return detectedAgent
-  }
-
-  try {
-    // FIXME(serhalp): pass cwd here, and audit where we shoiuld thread the parent pkg manager vs.
-    // where we should detect in the created *project* dir
-    const agent = await detect({ cwd: process.cwd() })
-    detectedAgent = agent || "npm" // Fallback to npm if detection fails
-    return detectedAgent
-  } catch {
-    // If detection fails, default to npm
-    detectedAgent = "npm"
-    return detectedAgent
-  }
-}
-
-/**
- * Get the package manager to use (synchronous wrapper with fallback)
- */
-const getPackageManager = (): string => {
-  return detectedAgent || "npm"
-}
-
-/**
- * Detect package manager and convert command to use the correct tool
- *
- * @param command - Command array (e.g., ['create', 'astro@5', 'my-app'])
- * @param packageManager - Package manager to use to run this command (e.g., 'npm', 'pnpm', 'yarn', 'bun')
- * @returns Converted command for the detected package manager
- */
-const withPackageManager = (
-  command: string[],
-  packageManager: string
-): string[] => {
-  const [verb, ...rest] = command
-
-  if (verb === "create") {
-    // Convert to the appropriate package manager's create command
-    // npm create astro@5 my-app
-    // pnpm create astro@5 my-app
-    // yarn create astro@5 my-app
-    // bun create astro@5 my-app (bun uses 'create' like npm)
-    return [packageManager, "create", ...rest]
-  } else if (verb === "npx") {
-    // Convert npx to the appropriate package manager's equivalent
-    // npm: npx
-    // pnpm: pnpm dlx
-    // yarn: yarn dlx
-    // bun: bunx
-    const npxEquivalent: Record<string, string[]> = {
-      npm: ["npx"],
-      pnpm: ["pnpm", "dlx"],
-      yarn: ["yarn", "dlx"],
-      bun: ["bunx"],
-    }
-
-    const prefix = npxEquivalent[packageManager] || ["npx"]
-    return [...prefix, ...rest]
-  }
-
-  // Fallback: return as-is
-  return command
-}
+import { detectPackageManager, withPackageManager } from "./package-manager.js"
 
 /**
  * Run the framework creation tool
@@ -92,27 +18,26 @@ const withPackageManager = (
  * @param framework - Framework configuration
  * @param projectName - Name for the new project
  * @param restArgs - Additional args to pass through
+ * @returns The project directory path, or null if not found
  */
 export const runFrameworkCreate = async (
   framework: FrameworkConfig,
   projectName: string,
   restArgs: string[]
-): Promise<void> => {
+): Promise<string | null> => {
   const spinner = createSpinner(
     `Creating ${framework.label} project "${projectName}"...`
   ).start()
 
   try {
-    // Build the command using framework config
-    const frameworkCreateCommand = framework.buildCreateCommand({
-      projectName,
-      restArgs,
-    })
-
-    // Convert to appropriate package manager command
-    const packageManager = await detectPackageManager()
+    // Detect which package manager invoked create-netlify and use that same package manager for all
+    // commands
+    const packageManager = detectPackageManager()
     const finalFrameworkCreateCommand = withPackageManager(
-      frameworkCreateCommand,
+      framework.buildCreateCommand({
+        projectName,
+        restArgs,
+      }),
       packageManager
     )
 
@@ -137,14 +62,16 @@ export const runFrameworkCreate = async (
         `Project directory ${highlightCode(projectName)} was not found. Skipping post-setup commands.`
       )
       log.warn(
-        "The framework may have created the project in a different location."
+        "The framework may have created the project in an unexpected location."
       )
+      return null
     } else {
       // Run post-create commands if any
-      if (framework.postCreateCommands) {
-        const postCommands = framework.postCreateCommands({
-          projectName,
+      if (framework.buildPostCreateCommands) {
+        const postCommands = framework.buildPostCreateCommands({
           cwd: projectDir,
+          packageManager,
+          projectName,
         })
 
         if (postCommands.length > 0) {
@@ -160,15 +87,11 @@ export const runFrameworkCreate = async (
               await postCommand()
             } else {
               // It's a command array - run it as a subprocess
-              const finalPostCommand = withPackageManager(
-                postCommand,
-                packageManager
-              )
               postSpinner.update({
-                text: `Running: ${finalPostCommand.join(" ")}`,
+                text: `Running: ${postCommand.join(" ")}`,
               })
               postSpinner.stop()
-              await runCommand(finalPostCommand, projectDir)
+              await runCommand(postCommand, projectDir)
             }
           }
 
@@ -177,15 +100,15 @@ export const runFrameworkCreate = async (
       }
     }
 
-    // Get the detected package manager for the success message
-    const agent = getPackageManager()
-
     log.success(`Project ${highlightCode(projectName)} created successfully!`)
-
-    note(
-      highlightCode(`cd ${projectName}\n${agent} install\n${agent} run dev`),
-      "Next steps"
-    )
+    // FIXME: This is cute but it's in the wrong spot sequentially.
+    // note(
+    //   highlightCode(
+    //     `cd ${projectName}\n${packageManager} install\n${packageManager} run dev`
+    //   ),
+    //   "Next steps"
+    // )
+    return projectDir
   } catch (error) {
     spinner.error({ text: "Failed to create project" })
     throw error

@@ -77,3 +77,23 @@ create astro dash dash, typescript dash dash, do you know what I mean?
 
 Like, giving it all the things that it needs so that it doesn't spin up the interactive prompts. I
 think that's about it.
+
+## "Did you mean?"
+
+TODO: write this TODO (Claude, ignore this one for now)
+
+## Pass invoked package manager to underlying framework create when possible
+
+TODO: write this TODO (Claude, ignore this one for now)
+
+## Add a few framework cli aliases (next = next.js = nextjs)
+
+TODO: write this TODO (Claude, ignore this one for now)
+
+## Fun idea: `npm create netlify astro --help` shows underlying create-astro's help
+
+TODO: write this TODO (Claude, ignore this one for now)
+
+## Auto-generate default project name
+
+Just use the framework name I think...

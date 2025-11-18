@@ -28,7 +28,6 @@
   "author": "Philippe Serhal <philippe.serhal@netlify.com>",
   "license": "MIT",
   "dependencies": {
-    "@antfu/ni": "^0.23.0",
     "@clack/prompts": "^0.11.0",
     "ansis": "^4.2.0",
     "magicast": "^0.5.1",

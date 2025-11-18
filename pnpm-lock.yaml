@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@antfu/ni':
-        specifier: ^0.23.0
-        version: 0.23.2
       '@clack/prompts':
         specifier: ^0.11.0
         version: 0.11.0
@@ -41,10 +38,6 @@ importers:
         version: 4.20.6
 
 packages:
-
-  '@antfu/ni@0.23.2':
-    resolution: {integrity: sha512-FSEVWXvwroExDXUu8qV6Wqp2X3D1nJ0Li4LFymCyvCVrm7I3lNfG0zZWSWvGU1RE7891eTnFTyh31L3igOwNKQ==}
-    hasBin: true
 
   '@babel/helper-string-parser@7.27.1':
     resolution: {integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==}
@@ -407,8 +400,6 @@ packages:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
 snapshots:
-
-  '@antfu/ni@0.23.2': {}
 
   '@babel/helper-string-parser@7.27.1': {}
 

@@ -12,6 +12,8 @@
  *   npm create netlify astro -- --template blog  → Pass options to underlying tool
  */
 
+import { join } from "node:path"
+
 import {
   cancel,
   confirm,
@@ -82,7 +84,7 @@ const showIntro = async (): Promise<void> => {
 
        ${ansis.dim("Push your ideas to the web")}
   `)
-  const FINAL_PAUSE_MS = 700
+  const FINAL_PAUSE_MS = 200
   await new Promise((resolve) => setTimeout(resolve, FINAL_PAUSE_MS))
 }
 
@@ -343,37 +345,108 @@ const main = async (): Promise<void> => {
       process.exit(0)
     }
 
-    // Get the framework config
-    const framework = getFramework(frameworkId)!
-
     // Run the framework creation tool
     log.info("")
-    await runFrameworkCreate(framework, projectName, args.restArgs)
+    const projectDir =
+      (await runFrameworkCreate(
+        getFramework(frameworkId)!,
+        projectName,
+        args.restArgs
+      )) ?? join(".", projectName)
     log.info("")
 
     log.step("🤝 ... And we're back!")
 
+    // Create a Netlify project. This will fire off some more interactive prompts.
+    // This is especially important for a few reasons:
+    // - The Netlify DB and agent run steps below won't work without a linked Netlify project.
+    // - This will perform "framework detection" and configure build settings automatically.
+    //   - TODO(serhalp): We should probably do this ourselves and use `netlify sites:create` or
+    //     something?
+    log.info("Creating and configuring a Netlify project...")
+    const { runCommand } = await import("./lib/shell.js")
+    const { detectPackageManager, withPackageManager } =
+      await import("./lib/package-manager.js")
+    const packageManager = detectPackageManager()
+    await runCommand(
+      withPackageManager(["exec", "netlify@23", "--", "init"], packageManager),
+      projectDir
+    )
+
+    log.info("Deploying your Netlify project for the first time...")
+    await runCommand(
+      withPackageManager(
+        ["exec", "netlify@23", "--", "deploy", "--prod"],
+        packageManager
+      ),
+      projectDir
+    )
+
     if (shouldInstallDatabase) {
       log.info("Installing Netlify DB...")
       const { runCommand } = await import("./lib/shell.js")
-      const { detect } = await import("@antfu/ni")
-      const agent = await detect({ cwd: process.cwd() })
-      await runCommand(
-        [agent || "npx", "--yes", "netlify@latest", "db", "init"],
-        projectName
+      const { detectPackageManager, withPackageManager } =
+        await import("./lib/package-manager.js")
+
+      // Use the same package manager that invoked create-netlify
+      const packageManager = detectPackageManager()
+      const command = withPackageManager(
+        ["exec", "netlify@23", "db", "init"],
+        packageManager
       )
+      await runCommand(command, projectDir)
     }
 
     if (shouldInstallAIContext) {
       log.info("Adding AI context files...")
       const { runCommand } = await import("./lib/shell.js")
-      const { detect } = await import("@antfu/ni")
-      const agent = await detect({ cwd: process.cwd() })
+      const { detectPackageManager, withPackageManager } =
+        await import("./lib/package-manager.js")
+
+      // Use the same package manager that invoked create-netlify
+      const packageManager = detectPackageManager()
       // TODO(serhalp): Add a `--quiet` flag to this command or at least make it less noisy.
-      await runCommand(
-        [agent || "npx", "--yes", "netlify@latest", "recipes", "ai-context"],
-        projectName
+      const command = withPackageManager(
+        ["exec", "netlify@23", "--", "recipes", "ai-context"],
+        packageManager
       )
+      await runCommand(command, projectDir)
+    }
+
+    // Optional: Let user kick off an agent task
+    const agentPromptResult = await text({
+      message: `🤖 ${netlifyCyan("Want an AI agent to start building for you?")} ${ansis.dim("(press Enter to skip)")}`,
+      placeholder: "e.g., Add a homepage with a hero section and contact form",
+    })
+
+    if (isCancel(agentPromptResult)) {
+      cancel("Operation cancelled")
+      process.exit(0)
+    }
+
+    const agentPrompt = agentPromptResult?.trim()
+
+    if (agentPrompt) {
+      log.info("Starting AI agent...")
+      const { runCommand } = await import("./lib/shell.js")
+      const { detectPackageManager, withPackageManager } =
+        await import("./lib/package-manager.js")
+
+      const packageManager = detectPackageManager()
+      // Escape the prompt for shell by wrapping in double quotes and escaping any internal quotes
+      const escapedPrompt = `"${agentPrompt.replace(/"/g, '\\"')}"`
+      const command = withPackageManager(
+        [
+          "exec",
+          "netlify@23",
+          "--",
+          "agents:create",
+          "--agent=claude",
+          escapedPrompt,
+        ],
+        packageManager
+      )
+      await runCommand(command, projectDir)
     }
 
     await showOutro()
