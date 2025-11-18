@@ -59,7 +59,10 @@ export const withPackageManager = (
   if (verb === "exec") {
     switch (packageManager) {
       case "npm":
-        return ["npm", "exec", "--yes", ...rest]
+        const [packageName, ...packageArgs] = rest
+        // `npm exec` requires `--` to ensure all args (positional and flags) are passed to the
+        // underlying package binary rather than interpreted by npm itself
+        return ["npm", "exec", "--yes", packageName, "--", ...packageArgs]
       case "pnpm":
         return ["pnpm", "dlx", ...rest]
       case "yarn":

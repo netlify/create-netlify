@@ -85,7 +85,7 @@ export const frameworks: FrameworkConfig[] = [
         withPackageManager(
           // TODO(serhalp): The `astro add` help claims it supports `--yes` but it fails when used.
           // Report this to Astro.
-          ["exec", "astro", "--", "add", "netlify"],
+          ["exec", "astro", "add", "netlify"],
           packageManager
         ),
       ]
@@ -96,7 +96,7 @@ export const frameworks: FrameworkConfig[] = [
     label: "Next.js",
     description: "The React Framework for the Web",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "create-next-app@16", "--", projectName, ...restArgs]
+      return ["exec", "create-next-app@16", projectName, ...restArgs]
     },
     buildPostCreateCommands: () => {
       // Zero config
@@ -108,7 +108,7 @@ export const frameworks: FrameworkConfig[] = [
     label: "Vite",
     description: "Next Generation Frontend Tooling",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "create-vite@7", "--", projectName, ...restArgs]
+      return ["exec", "create-vite@7", projectName, ...restArgs]
     },
     buildPostCreateCommands: ({ cwd, packageManager }) => {
       return [
@@ -133,7 +133,7 @@ export const frameworks: FrameworkConfig[] = [
     label: "Nuxt",
     description: "The Intuitive Vue Framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "nuxi@4", "--", "init", projectName, ...restArgs]
+      return ["exec", "nuxi@4", "init", projectName, ...restArgs]
     },
     buildPostCreateCommands: () => {
       return []
@@ -144,7 +144,7 @@ export const frameworks: FrameworkConfig[] = [
     label: "SvelteKit",
     description: "Web development, streamlined",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "create-svelte@7", "--", projectName, ...restArgs]
+      return ["exec", "create-svelte@7", projectName, ...restArgs]
     },
     buildPostCreateCommands: () => {
       // TODO: Add Netlify adapter for SvelteKit
@@ -156,7 +156,7 @@ export const frameworks: FrameworkConfig[] = [
     label: "React Router",
     description: "React Router v7 framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return ["exec", "create-react-router@7", "--", projectName, ...restArgs]
+      return ["exec", "create-react-router@7", projectName, ...restArgs]
     },
     buildPostCreateCommands: () => {
       // TODO: Add Netlify config for React Router

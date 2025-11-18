@@ -27,6 +27,7 @@ import {
 import ansis from "ansis"
 
 import {
+  highlightCode,
   netlifyBright,
   netlifyCyan,
   netlifyTeal,
@@ -34,6 +35,10 @@ import {
 } from "./lib/cli.js"
 import { frameworks, getFramework } from "./lib/framework-choices.js"
 import { runFrameworkCreate } from "./lib/framework-create.js"
+import {
+  type PackageManager,
+  withPackageManager,
+} from "./lib/package-manager.js"
 
 // Animated intro - diamond pulse/wave effect
 const showIntro = async (): Promise<void> => {
@@ -82,25 +87,40 @@ const showIntro = async (): Promise<void> => {
 
          ${netlifyCyan.bold("N E T L I F Y")}
 
-       ${ansis.dim("Push your ideas to the web")}
+       ${ansis.inverse("→ → → Push your ideas to the web")}
   `)
   const FINAL_PAUSE_MS = 200
   await new Promise((resolve) => setTimeout(resolve, FINAL_PAUSE_MS))
 }
 
-const showOutro = async (): Promise<void> => {
+// When we're all done, but before we prompt you to run an AI agent task
+const showPreOutro = async (): Promise<void> => {
   console.log("")
+  console.log("")
+  console.log(
+    `   ${netlifyBright.inverse(" 🚀 ")} ${netlifyCyan.bold("Your Netlify project is up and running! Go forth and build.")}`
+  )
+}
+
+const showOutro = async (
+  projectDir: string,
+  packageManager: PackageManager
+): Promise<void> => {
   console.log("")
 
-  // Simple success with inverse highlight
-  console.log(
-    `   ${netlifyBright.inverse(" ✓ ")} ${netlifyCyan.bold("Project ready!")}`
+  const deployCommand = withPackageManager(
+    ["exec", "netlify@latest", "deploy"],
+    packageManager
+  ).join(" ")
+  note(
+    highlightCode(
+      `cd ${projectDir}\n${packageManager} run dev # Start the development server\n${deployCommand} # Deploy to Netlify`
+    ),
+    "Next steps"
   )
-  console.log("")
   console.log(
     `   ${ansis.dim("Deploy to")} ${netlifyCyan.inverse(" Netlify ")} ${ansis.dim("→")} ${ansis.cyan("app.netlify.com")}`
   )
-  console.log("")
 }
 
 const main = async (): Promise<void> => {
@@ -369,14 +389,14 @@ const main = async (): Promise<void> => {
       await import("./lib/package-manager.js")
     const packageManager = detectPackageManager()
     await runCommand(
-      withPackageManager(["exec", "netlify@23", "--", "init"], packageManager),
+      withPackageManager(["exec", "netlify@23", "init"], packageManager),
       projectDir
     )
 
     log.info("Deploying your Netlify project for the first time...")
     await runCommand(
       withPackageManager(
-        ["exec", "netlify@23", "--", "deploy", "--prod"],
+        ["exec", "netlify@23", "deploy", "--prod"],
         packageManager
       ),
       projectDir
@@ -385,11 +405,9 @@ const main = async (): Promise<void> => {
     if (shouldInstallDatabase) {
       log.info("Installing Netlify DB...")
       const { runCommand } = await import("./lib/shell.js")
-      const { detectPackageManager, withPackageManager } =
-        await import("./lib/package-manager.js")
+      const { withPackageManager } = await import("./lib/package-manager.js")
 
       // Use the same package manager that invoked create-netlify
-      const packageManager = detectPackageManager()
       const command = withPackageManager(
         ["exec", "netlify@23", "db", "init"],
         packageManager
@@ -400,23 +418,24 @@ const main = async (): Promise<void> => {
     if (shouldInstallAIContext) {
       log.info("Adding AI context files...")
       const { runCommand } = await import("./lib/shell.js")
-      const { detectPackageManager, withPackageManager } =
-        await import("./lib/package-manager.js")
+      const { withPackageManager } = await import("./lib/package-manager.js")
 
       // Use the same package manager that invoked create-netlify
-      const packageManager = detectPackageManager()
-      // TODO(serhalp): Add a `--quiet` flag to this command or at least make it less noisy.
       const command = withPackageManager(
-        ["exec", "netlify@23", "--", "recipes", "ai-context"],
+        // TODO(serhalp): Add a `--quiet` flag to this command or at least make it less noisy.
+        ["exec", "netlify@23", "recipes", "ai-context"],
         packageManager
       )
       await runCommand(command, projectDir)
     }
 
+    await showPreOutro()
+
     // Optional: Let user kick off an agent task
     const agentPromptResult = await text({
-      message: `🤖 ${netlifyCyan("Want an AI agent to start building for you?")} ${ansis.dim("(press Enter to skip)")}`,
-      placeholder: "e.g., Add a homepage with a hero section and contact form",
+      message: `🤖 ${netlifyCyan("Netlify's AI can help you build. Describe what you want, in as much or as little detail as you want: ")} ${ansis.dim("(press Enter to skip)")}`,
+      placeholder:
+        "e.g., Add a homepage with a hero section and contact form. NO PURPLE.",
     })
 
     if (isCancel(agentPromptResult)) {
@@ -429,17 +448,14 @@ const main = async (): Promise<void> => {
     if (agentPrompt) {
       log.info("Starting AI agent...")
       const { runCommand } = await import("./lib/shell.js")
-      const { detectPackageManager, withPackageManager } =
-        await import("./lib/package-manager.js")
+      const { withPackageManager } = await import("./lib/package-manager.js")
 
-      const packageManager = detectPackageManager()
       // Escape the prompt for shell by wrapping in double quotes and escaping any internal quotes
       const escapedPrompt = `"${agentPrompt.replace(/"/g, '\\"')}"`
       const command = withPackageManager(
         [
           "exec",
           "netlify@23",
-          "--",
           "agents:create",
           "--agent=claude",
           escapedPrompt,
@@ -449,7 +465,7 @@ const main = async (): Promise<void> => {
       await runCommand(command, projectDir)
     }
 
-    await showOutro()
+    await showOutro(projectDir, packageManager)
   } catch (error) {
     cancel("An error occurred")
     log.error(

@@ -101,13 +101,6 @@ export const runFrameworkCreate = async (
     }
 
     log.success(`Project ${highlightCode(projectName)} created successfully!`)
-    // FIXME: This is cute but it's in the wrong spot sequentially.
-    // note(
-    //   highlightCode(
-    //     `cd ${projectName}\n${packageManager} install\n${packageManager} run dev`
-    //   ),
-    //   "Next steps"
-    // )
     return projectDir
   } catch (error) {
     spinner.error({ text: "Failed to create project" })
