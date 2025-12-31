@@ -14,32 +14,13 @@
 
 import { join } from "node:path"
 
-import {
-  cancel,
-  confirm,
-  intro,
-  isCancel,
-  log,
-  note,
-  outro,
-  select,
-  text,
-} from "@clack/prompts"
+import { cancel, confirm, intro, isCancel, log, note, outro, select, text } from "@clack/prompts"
 import ansis from "ansis"
 
-import {
-  highlightCode,
-  netlifyBright,
-  netlifyCyan,
-  netlifyTeal,
-  parseArgs,
-} from "./lib/cli.js"
+import { highlightCode, netlifyBright, netlifyCyan, netlifyTeal, parseArgs } from "./lib/cli.js"
 import { frameworks, getFramework } from "./lib/framework-choices.js"
 import { runFrameworkCreate } from "./lib/framework-create.js"
-import {
-  type PackageManager,
-  withPackageManager,
-} from "./lib/package-manager.js"
+import { type PackageManager, withPackageManager } from "./lib/package-manager.js"
 
 // Animated intro - diamond pulse/wave effect
 const showIntro = async (): Promise<void> => {
@@ -102,10 +83,7 @@ const showPreOutro = async (): Promise<void> => {
   )
 }
 
-const showOutro = async (
-  projectDir: string,
-  packageManager: PackageManager
-): Promise<void> => {
+const showOutro = async (projectDir: string, packageManager: PackageManager): Promise<void> => {
   console.log("")
 
   const deployCommand = withPackageManager(
@@ -136,9 +114,7 @@ const main = async (): Promise<void> => {
       if (!framework) {
         cancel(`Unknown framework: ${args.framework}`)
 
-        const availableFrameworks = frameworks
-          .map((f) => `  - ${f.id}`)
-          .join("\n")
+        const availableFrameworks = frameworks.map((f) => `  - ${f.id}`).join("\n")
         note(availableFrameworks, "Available frameworks")
 
         process.exit(1)
@@ -234,18 +210,13 @@ const main = async (): Promise<void> => {
         }
 
         frameworkId = frameworkResult
-      } else if (
-        useCase === "blog" ||
-        useCase === "marketing" ||
-        useCase === "landing"
-      ) {
+      } else if (useCase === "blog" || useCase === "marketing" || useCase === "landing") {
         frameworkId = "astro"
       } else if (useCase === "unsure") {
         frameworkId = "vite"
       } else if (useCase === "interactive") {
         const frameworkResult = await select({
-          message:
-            "Choose your framework-you can't go wrong with any of these:",
+          message: "Choose your framework-you can't go wrong with any of these:",
           options: [
             {
               value: "tanstack-start",
@@ -283,8 +254,7 @@ const main = async (): Promise<void> => {
         frameworkId = frameworkResult
       } else if (useCase === "ecommerce") {
         const frameworkResult = await select({
-          message:
-            "Choose your framework-you can't go wrong with any of these:",
+          message: "Choose your framework-you can't go wrong with any of these:",
           options: [
             {
               value: "astro",
@@ -349,8 +319,7 @@ const main = async (): Promise<void> => {
     }
 
     const shouldInstallAIContext = await confirm({
-      message:
-        "Add AI context files to improve coding agent experience in this project?",
+      message: "Add AI context files to improve coding agent experience in this project?",
       initialValue: true,
     })
 
@@ -362,11 +331,8 @@ const main = async (): Promise<void> => {
     // Run the framework creation tool
     log.info("")
     const projectDir =
-      (await runFrameworkCreate(
-        getFramework(frameworkId)!,
-        projectName,
-        args.restArgs
-      )) ?? join(".", projectName)
+      (await runFrameworkCreate(getFramework(frameworkId)!, projectName, args.restArgs)) ??
+      join(".", projectName)
     log.info("")
 
     log.step("🤝 ... And we're back!")
@@ -379,40 +345,26 @@ const main = async (): Promise<void> => {
     //     something?
     log.info("Creating and configuring a Netlify project...")
     const { runCommand } = await import("./lib/shell.js")
-    const { detectPackageManager, withPackageManager } =
-      await import("./lib/package-manager.js")
+    const { detectPackageManager, withPackageManager } = await import("./lib/package-manager.js")
     const packageManager = detectPackageManager()
-    await runCommand(
-      withPackageManager(["exec", "netlify@23", "init"], packageManager),
-      projectDir
-    )
+    await runCommand(withPackageManager(["exec", "netlify@23", "init"], packageManager), projectDir)
 
     log.info("Deploying your Netlify project for the first time...")
     await runCommand(
-      withPackageManager(
-        ["exec", "netlify@23", "deploy", "--prod"],
-        packageManager
-      ),
+      withPackageManager(["exec", "netlify@23", "deploy", "--prod"], packageManager),
       projectDir
     )
 
     if (shouldInstallDatabase) {
       log.info("Installing Netlify DB...")
-      const { runCommand } = await import("./lib/shell.js")
-      const { withPackageManager } = await import("./lib/package-manager.js")
 
       // Use the same package manager that invoked create-netlify
-      const command = withPackageManager(
-        ["exec", "netlify@23", "db", "init"],
-        packageManager
-      )
+      const command = withPackageManager(["exec", "netlify@23", "db", "init"], packageManager)
       await runCommand(command, projectDir)
     }
 
     if (shouldInstallAIContext) {
       log.info("Adding AI context files...")
-      const { runCommand } = await import("./lib/shell.js")
-      const { withPackageManager } = await import("./lib/package-manager.js")
 
       // Use the same package manager that invoked create-netlify
       const command = withPackageManager(
@@ -428,8 +380,7 @@ const main = async (): Promise<void> => {
     // Optional: Let user kick off an agent task
     const agentPromptResult = await text({
       message: `🤖 (Optional) ${netlifyCyan("Netlify's AI can help you. Describe what you want, in as much or as little detail as you want: ")} ${ansis.dim("(press Enter to skip)")}`,
-      placeholder:
-        "e.g., Add a homepage with a hero section and contact form. NO PURPLE.",
+      placeholder: "e.g., Add a homepage with a hero section and contact form. NO PURPLE.",
     })
 
     if (isCancel(agentPromptResult)) {
@@ -441,19 +392,11 @@ const main = async (): Promise<void> => {
 
     if (agentPrompt) {
       log.info("Starting AI agent...")
-      const { runCommand } = await import("./lib/shell.js")
-      const { withPackageManager } = await import("./lib/package-manager.js")
 
       // Escape the prompt for shell by wrapping in double quotes and escaping any internal quotes
       const escapedPrompt = `"${agentPrompt.replace(/"/g, '\\"')}"`
       const command = withPackageManager(
-        [
-          "exec",
-          "netlify@23",
-          "agents:create",
-          "--agent=claude",
-          escapedPrompt,
-        ],
+        ["exec", "netlify@23", "agents:create", "--agent=claude", escapedPrompt],
         packageManager
       )
       await runCommand(command, projectDir)
@@ -462,9 +405,7 @@ const main = async (): Promise<void> => {
     await showOutro(projectDir, packageManager)
   } catch (error) {
     cancel("An error occurred")
-    log.error(
-      error instanceof Error ? error.message : (error?.toString() ?? "")
-    )
+    log.error(error instanceof Error ? error.message : (error?.toString() ?? ""))
     process.exit(1)
   }
 }

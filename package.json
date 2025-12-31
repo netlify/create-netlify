@@ -2,14 +2,21 @@
   "name": "create-netlify",
   "version": "0.0.1",
   "description": "Meta create tool for scaffolding Netlify-ready projects",
-  "type": "module",
-  "packageManager": "pnpm@9.15.4",
+  "keywords": [
+    "cli",
+    "create",
+    "netlify",
+    "scaffold"
+  ],
+  "license": "MIT",
+  "author": "Philippe Serhal <philippe.serhal@netlify.com>",
   "bin": {
     "create-netlify": "./dist/main.js"
   },
   "files": [
     "dist"
   ],
+  "type": "module",
   "scripts": {
     "build": "tsgo --build",
     "dev": "tsx src/main.ts",
@@ -19,14 +26,6 @@
     "prepack": "pnpm run build",
     "typecheck": "tsgo --noEmit"
   },
-  "keywords": [
-    "create",
-    "netlify",
-    "scaffold",
-    "cli"
-  ],
-  "author": "Philippe Serhal <philippe.serhal@netlify.com>",
-  "license": "MIT",
   "dependencies": {
     "@clack/prompts": "^0.11.0",
     "ansis": "^4.2.0",
@@ -35,12 +34,13 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@typescript/native-preview": "7.0.0-dev.20251110.1",
-    "oxfmt": "^0.12.0",
-    "oxlint": "^1.26.0",
-    "tsx": "^4.19.2"
+    "@typescript/native-preview": "7.0.0-dev.20251231.1",
+    "oxfmt": "^0.21.0",
+    "oxlint": "^1.36.0",
+    "tsx": "^4.21.0"
   },
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "packageManager": "pnpm@9.15.4"
 }

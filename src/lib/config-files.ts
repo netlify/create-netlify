@@ -25,12 +25,7 @@ export const addVitePlugin = async (
   pluginOptions?: Record<string, any>
 ): Promise<void> => {
   // Find vite config file
-  const configFiles = [
-    "vite.config.ts",
-    "vite.config.js",
-    "vite.config.mjs",
-    "vite.config.mts",
-  ]
+  const configFiles = ["vite.config.ts", "vite.config.js", "vite.config.mjs", "vite.config.mts"]
 
   let configPath: string | undefined
   for (const file of configFiles) {

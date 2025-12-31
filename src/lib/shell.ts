@@ -7,10 +7,7 @@ import { spawn } from "node:child_process"
  * @param cwd - Working directory
  * @returns Promise that resolves on success or rejects on error
  */
-export const runCommand = async (
-  command: string[],
-  cwd: string = process.cwd()
-): Promise<void> => {
+export const runCommand = async (command: string[], cwd: string = process.cwd()): Promise<void> => {
   return new Promise((resolve, reject) => {
     const [cmd, ...args] = command
 
@@ -22,11 +19,7 @@ export const runCommand = async (
 
     child.on("close", (code) => {
       if (code !== 0) {
-        reject(
-          new Error(
-            `Command failed with exit code ${code}: ${command.join(" ")}`
-          )
-        )
+        reject(new Error(`Command failed with exit code ${code}: ${command.join(" ")}`))
       } else {
         resolve()
       }

@@ -44,10 +44,7 @@ export const detectPackageManager = (): PackageManager => {
  * @param packageManager - Package manager to use
  * @returns Converted command for the package manager
  */
-export const withPackageManager = (
-  command: string[],
-  packageManager: PackageManager
-): string[] => {
+export const withPackageManager = (command: string[], packageManager: PackageManager): string[] => {
   const [verb, ...rest] = command
 
   if (verb === "create") {

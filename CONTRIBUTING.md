@@ -101,7 +101,9 @@ create-netlify/
 ### Key Modules
 
 #### `main.ts`
+
 CLI entrypoint that orchestrates the entire flow:
+
 - Shows animated intro
 - Handles interactive vs. direct mode
 - Prompts for use case or framework
@@ -111,13 +113,17 @@ CLI entrypoint that orchestrates the entire flow:
 - Shows outro
 
 #### `lib/framework-choices.ts`
+
 Defines all supported frameworks and their configurations:
+
 - Framework metadata (id, label, description)
 - `buildCommand()`: Returns the create command with version pins
 - `postCreateCommands()`: Optional setup commands (can be shell commands or functions)
 
 #### `lib/framework-create.ts`
+
 Core logic for running framework creation:
+
 - Executes the framework's create command
 - Verifies project directory was created
 - Runs post-create commands (shell or functions)
@@ -125,13 +131,17 @@ Core logic for running framework creation:
 - Command conversion (`npx` → `pnpm dlx`, etc.)
 
 #### `lib/shell.ts`
+
 Shell command execution utilities:
+
 - `runCommand()`: Execute shell commands with proper stdio handling
 - Package manager detection & caching
 - Command conversion for different package managers
 
 #### `lib/config-files.ts`
+
 Config file manipulation using [magicast](https://github.com/unjs/magicast):
+
 - AST-based modifications (safer than regex)
 - `addVitePlugin()`: Add plugins to Vite config
 - Uses magicast's built-in Vite helpers
@@ -187,6 +197,7 @@ The tool auto-detects which package manager you're using via `@antfu/ni`:
 - Looks for `package-lock.json` → **npm**
 
 Commands are automatically converted:
+
 - `npm create` → `pnpm create`, `yarn create`, etc.
 - `npx foo` → `pnpm dlx foo`, `yarn dlx foo`, `bunx foo`
 
@@ -195,6 +206,7 @@ Commands are automatically converted:
 ### Why prompt for directory upfront?
 
 We ask for the project directory before running the framework's create command so we can:
+
 - Pass it to the underlying tool (avoiding duplicate prompts)
 - Know exactly where to run post-setup commands
 - Verify the project was created successfully
@@ -202,6 +214,7 @@ We ask for the project directory before running the framework's create command s
 ### Why use magicast for config files?
 
 AST-based manipulation is safer than regex or string replacement:
+
 - Preserves formatting and comments
 - Type-safe transformations
 - Framework-specific helpers (e.g., Vite)
@@ -210,6 +223,7 @@ AST-based manipulation is safer than regex or string replacement:
 ### Why separate shell commands from config functions?
 
 Post-create commands can be either shell commands or async functions:
+
 - Shell commands for simple tasks (install packages, run CLI tools)
 - Functions for complex config manipulation (magicast, file I/O)
 - Keeps framework configs declarative and testable

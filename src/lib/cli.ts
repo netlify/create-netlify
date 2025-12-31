@@ -32,10 +32,8 @@ export const parseArgs = (argv: string[]): ParsedArgs => {
 
   // Find the separator `--` which marks passthrough args
   const separatorIndex = argv.indexOf("--")
-  const beforeSeparator =
-    separatorIndex !== -1 ? argv.slice(0, separatorIndex) : argv
-  const afterSeparator =
-    separatorIndex !== -1 ? argv.slice(separatorIndex + 1) : []
+  const beforeSeparator = separatorIndex !== -1 ? argv.slice(0, separatorIndex) : argv
+  const afterSeparator = separatorIndex !== -1 ? argv.slice(separatorIndex + 1) : []
 
   // First non-option argument is the framework ID
   // (We're keeping this simple; not using a full arg parser)

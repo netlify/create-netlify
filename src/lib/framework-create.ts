@@ -25,9 +25,7 @@ export const runFrameworkCreate = async (
   projectName: string,
   restArgs: string[]
 ): Promise<string | null> => {
-  const spinner = createSpinner(
-    `Creating ${framework.label} project "${projectName}"...`
-  ).start()
+  const spinner = createSpinner(`Creating ${framework.label} project "${projectName}"...`).start()
 
   try {
     // Detect which package manager invoked create-netlify and use that same package manager for all
@@ -61,9 +59,7 @@ export const runFrameworkCreate = async (
       log.warn(
         `Project directory ${highlightCode(projectName)} was not found. Skipping post-setup commands.`
       )
-      log.warn(
-        "The framework may have created the project in an unexpected location."
-      )
+      log.warn("The framework may have created the project in an unexpected location.")
       return null
     } else {
       // Run post-create commands if any
@@ -75,9 +71,7 @@ export const runFrameworkCreate = async (
         })
 
         if (postCommands.length > 0) {
-          const postSpinner = createSpinner(
-            "Configuring framewok project for Netlify..."
-          ).start()
+          const postSpinner = createSpinner("Configuring framewok project for Netlify...").start()
 
           for (const postCommand of postCommands) {
             if (typeof postCommand === "function") {

@@ -25,10 +25,7 @@ export interface FrameworkConfig {
    * @param restArgs - Any additional CLI args to pass through (e.g., --template, --skip-houston)
    * @returns Command parts as array [command, ...args]
    */
-  buildCreateCommand(args: {
-    projectName: string
-    restArgs: string[]
-  }): string[]
+  buildCreateCommand(args: { projectName: string; restArgs: string[] }): string[]
 
   /**
    * Optional post-create commands to run after scaffolding.
@@ -71,24 +68,10 @@ export const frameworks: FrameworkConfig[] = [
     description: "The web framework for content-driven websites",
     buildCreateCommand: ({ projectName, restArgs }) => {
       // We force `--install, otherwise our `astro add netlify` may fail
-      return [
-        "exec",
-        "create-astro@4",
-        "--",
-        projectName,
-        "--install",
-        ...restArgs,
-      ]
+      return ["exec", "create-astro@4", "--", projectName, "--install", ...restArgs]
     },
     buildPostCreateCommands: ({ packageManager }) => {
-      return [
-        withPackageManager(
-          // TODO(serhalp): The `astro add` help claims it supports `--yes` but it fails when used.
-          // Report this to Astro.
-          ["exec", "astro", "add", "netlify"],
-          packageManager
-        ),
-      ]
+      return [withPackageManager(["exec", "astro", "add", "--yes", "netlify"], packageManager)]
     },
   },
   {
@@ -113,10 +96,7 @@ export const frameworks: FrameworkConfig[] = [
     buildPostCreateCommands: ({ cwd, packageManager }) => {
       return [
         // Install the Netlify Vite plugin
-        withPackageManager(
-          ["add", "--save-dev", "@netlify/vite-plugin"],
-          packageManager
-        ),
+        withPackageManager(["add", "--save-dev", "@netlify/vite-plugin"], packageManager),
         // Add it to vite.config using magicast's Vite helpers
         async () => {
           await addVitePlugin(cwd, {
@@ -133,16 +113,9 @@ export const frameworks: FrameworkConfig[] = [
     label: "Nuxt",
     description: "The Intuitive Vue Framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return [
-        "exec",
-        "nuxi@4",
-        "init",
-        projectName,
-        "--modules=netlify",
-        ...restArgs,
-      ]
+      return ["exec", "nuxi@4", "init", projectName, "--modules=netlify", ...restArgs]
     },
-    // `nuxi init` with `--modules=netlify` above ^ installs and `@netlify/nuxt` and adds it to
+    // `nuxi init` with `--modules=netlify` above ^ installs `@netlify/nuxt` and adds it to
     // nuxt.config.*
     buildPostCreateCommands: () => {
       return []
@@ -165,24 +138,13 @@ export const frameworks: FrameworkConfig[] = [
     label: "React Router",
     description: "React Router v7 framework",
     buildCreateCommand: ({ projectName, restArgs }) => {
-      return [
-        "exec",
-        "create-react-router@7",
-        projectName,
-        "--install",
-        ...restArgs,
-      ]
+      return ["exec", "create-react-router@7", projectName, "--install", ...restArgs]
     },
     buildPostCreateCommands: ({ cwd, packageManager }) => {
       return [
         // Install the Netlify React Router plugin + Netlify Vite plugin
         withPackageManager(
-          [
-            "add",
-            "--save-dev",
-            "@netlify/vite-plugin",
-            "@netlify/vite-plugin-react-router",
-          ],
+          ["add", "--save-dev", "@netlify/vite-plugin", "@netlify/vite-plugin-react-router"],
           packageManager
         ),
         // Add it to vite.config using magicast's Vite helpers
