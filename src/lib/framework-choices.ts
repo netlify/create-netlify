@@ -71,7 +71,7 @@ export const frameworks: FrameworkConfig[] = [
       return ["exec", "create-astro@4", "--", projectName, "--install", ...restArgs]
     },
     buildPostCreateCommands: ({ packageManager }) => {
-      return [withPackageManager(["exec", "astro", "add", "--yes", "netlify"], packageManager)]
+      return [withPackageManager(["exec", "astro", "add", "netlify", "--yes"], packageManager)]
     },
   },
   {
