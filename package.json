@@ -31,7 +31,8 @@
     "ansis": "^4.2.0",
     "debug": "^4.4.3",
     "magicast": "^0.5.1",
-    "nanospinner": "^1.1.0"
+    "nanospinner": "^1.1.0",
+    "terminal-link": "^5.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
