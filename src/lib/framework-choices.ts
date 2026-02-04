@@ -60,6 +60,7 @@ export interface FrameworkConfig {
  *
  * TODO: Add more frameworks as needed
  * TODO: Make version pins configurable
+ * TODO: Build-time validation that `buildCreateCommand()` does NOT include a `--`
  */
 export const frameworks: FrameworkConfig[] = [
   {
@@ -68,7 +69,7 @@ export const frameworks: FrameworkConfig[] = [
     description: "The web framework for content-driven websites",
     buildCreateCommand: ({ projectName, restArgs }) => {
       // We force `--install, otherwise our `astro add netlify` may fail
-      return ["exec", "create-astro@4", "--", projectName, "--install", ...restArgs]
+      return ["exec", "create-astro@4", projectName, "--install", ...restArgs]
     },
     buildPostCreateCommands: ({ packageManager }) => {
       return [withPackageManager(["exec", "astro", "add", "netlify", "--yes"], packageManager)]

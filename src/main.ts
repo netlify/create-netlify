@@ -16,6 +16,7 @@ import { join } from "node:path"
 
 import { cancel, confirm, intro, isCancel, log, note, outro, select, text } from "@clack/prompts"
 import ansis from "ansis"
+import terminalLink from "terminal-link"
 
 import { highlightCode, netlifyBright, netlifyCyan, netlifyTeal, parseArgs } from "./lib/cli.js"
 import { frameworks, getFramework } from "./lib/framework-choices.js"
@@ -83,7 +84,30 @@ const showPreOutro = async (): Promise<void> => {
   )
 }
 
-const showOutro = async (projectDir: string, packageManager: PackageManager): Promise<void> => {
+const getProjectId = async (
+  projectDir: string,
+  packageManager: PackageManager
+): Promise<string | null> => {
+  try {
+    const { runCommand } = await import("./lib/shell.js")
+    const statusOutput = await runCommand(
+      withPackageManager(["exec", "netlify@23", "status", "--json"], packageManager),
+      projectDir
+    )
+    const statusJson = JSON.parse(statusOutput ?? "") as {
+      siteData: { "site-id": string }
+    }
+    return statusJson.siteData["site-id"]
+  } catch {
+    return null
+  }
+}
+
+const showOutro = async (
+  projectDir: string,
+  projectId: string | null,
+  packageManager: PackageManager
+): Promise<void> => {
   console.log("")
 
   const deployCommand = withPackageManager(
@@ -91,7 +115,18 @@ const showOutro = async (projectDir: string, packageManager: PackageManager): Pr
     packageManager
   ).join(" ")
   outro(
-    `Next steps:\n${highlightCode(`cd ${projectDir}\n${packageManager} run dev`)} # Start the development server\n${highlightCode(deployCommand)} # Deploy to Netlify\n${ansis.dim("Read the Netlify docs ")} ${ansis.dim("→")} ${ansis.cyan("https://app.netlify.com")}`
+    `Next steps:\n${highlightCode(`cd ${projectDir}\n${packageManager} run dev`)} # Start the development server\n${highlightCode(deployCommand)} # Deploy to Netlify\n${ansis.dim("Read the Netlify docs ")} ${ansis.dim("→")} ${ansis.cyan(terminalLink("https://app.netlify.com", "https://app.netlify.com"))}`
+  )
+
+  const linkCommand = withPackageManager(["exec", "netlify@latest", "link"], packageManager).join(
+    " "
+  )
+  const linkUrl = `https://app.netlify.com/projects/${projectId ?? ""}/link`
+  const maybeAlternativeLinkSteps = projectId
+    ? ` ${ansis.underline("or")} by visiting ${ansis.cyan(terminalLink(linkUrl, linkUrl))}`
+    : ""
+  outro(
+    `Future steps:\nAdd your code to a Git repository and push to ${ansis.cyan(terminalLink("GitHub", "https://github.com"))} or another provider.\nThen, enable ${terminalLink("continuous deployment to your Netlify site", "https://docs.netlify.com/deploy/create-deploys/#deploy-with-git")} by running ${highlightCode(linkCommand)}${maybeAlternativeLinkSteps}.`
   )
 }
 
@@ -146,6 +181,7 @@ const main = async (): Promise<void> => {
 
       const useCaseResult = await select({
         message: "What would you like to build?",
+        // TODO(serhalp): Extract to a config file
         options: [
           {
             value: "blog",
@@ -217,6 +253,7 @@ const main = async (): Promise<void> => {
       } else if (useCase === "interactive") {
         const frameworkResult = await select({
           message: "Choose your framework-you can't go wrong with any of these:",
+          // TODO(serhalp): Extract to a config file
           options: [
             {
               value: "tanstack-start",
@@ -255,6 +292,7 @@ const main = async (): Promise<void> => {
       } else if (useCase === "ecommerce") {
         const frameworkResult = await select({
           message: "Choose your framework-you can't go wrong with any of these:",
+          // TODO(serhalp): Extract to a config file
           options: [
             {
               value: "astro",
@@ -349,6 +387,9 @@ const main = async (): Promise<void> => {
     const packageManager = detectPackageManager()
     await runCommand(withPackageManager(["exec", "netlify@23", "init"], packageManager), projectDir)
 
+    // Fire this off now, we'll need it later
+    const projectIdPromise = getProjectId(projectDir, packageManager)
+
     log.info("Deploying your Netlify project for the first time...")
     await runCommand(
       withPackageManager(["exec", "netlify@23", "deploy", "--prod"], packageManager),
@@ -402,7 +443,7 @@ const main = async (): Promise<void> => {
       await runCommand(command, projectDir)
     }
 
-    await showOutro(projectDir, packageManager)
+    await showOutro(projectDir, await projectIdPromise, packageManager)
   } catch (error) {
     cancel("An error occurred")
     log.error(error instanceof Error ? error.message : (error?.toString() ?? ""))

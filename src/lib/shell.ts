@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process"
 
+import debug from "./debug.js"
+
 /**
  * Execute a command as a child process
  *
