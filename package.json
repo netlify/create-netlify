@@ -1,20 +1,49 @@
 {
   "name": "create-netlify",
-  "version": "0.0.1",
-  "description": "Create a new Netlify site",
+  "version": "0.0.2-1",
+  "description": "Meta create tool for scaffolding Netlify-ready projects",
+  "keywords": [
+    "cli",
+    "create",
+    "netlify",
+    "scaffold"
+  ],
+  "license": "MIT",
+  "author": "Philippe Serhal <philippe.serhal@netlify.com>",
   "bin": {
-    "create-netlify": "bin/create-netlify"
+    "create-netlify": "./dist/main.js"
   },
   "files": [
-    "bin/create-netlify"
+    "dist"
   ],
+  "type": "module",
   "scripts": {
-    "bin": "node bin/create-netlify"
+    "build": "tsgo --build",
+    "dev": "tsx src/main.ts",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint src",
+    "prepack": "pnpm run build",
+    "typecheck": "tsgo --noEmit"
   },
-  "author": "Matt Kane <matt.kane@netlify.com>",
-  "license": "MIT",
   "dependencies": {
-    "chalk": "^4.1.2",
-    "netlify-cli": "latest"
-  }
+    "@clack/prompts": "^0.11.0",
+    "ansis": "^4.2.0",
+    "debug": "^4.4.3",
+    "magicast": "^0.5.1",
+    "nanospinner": "^1.1.0",
+    "terminal-link": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/node": "^20",
+    "@typescript/native-preview": "7.0.0-dev.20251231.1",
+    "oxfmt": "^0.21.0",
+    "oxlint": "^1.36.0",
+    "tsx": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@9.15.4"
 }

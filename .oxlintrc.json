@@ -1,0 +1,34 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "jsdoc", "node", "oxc", "promise", "typescript", "vitest", "unicorn"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn",
+    "pedantic": "off",
+    "style": "off",
+    "nursery": "off",
+    "restriction": "off"
+  },
+  "rules": {
+    "no-await-in-loop": "off",
+    "no-named-as-default-member": "off",
+    "no-magic-numbers": [
+      "warn",
+      {
+        "ignore": [-1, 0, 1, 2]
+      }
+    ]
+  },
+  "settings": {
+    "jsdoc": {},
+    "vitest": {}
+  },
+  "env": {
+    "builtin": true,
+    "node": true,
+    "es2022": true
+  },
+  "globals": {},
+  "ignorePatterns": ["node_modules", "dist", "coverage"]
+}
